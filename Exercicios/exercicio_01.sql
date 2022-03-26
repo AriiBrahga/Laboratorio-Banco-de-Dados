@@ -2,7 +2,7 @@
 --
 CREATE TABLE tb_regiao(
 id_regiao			NUMBER CONSTRAINT nn_id_regiao NOT NULL,
-nm_regiao			VARCHAR2(25);
+nm_regiao			VARCHAR2(25)
 
 );
 
@@ -42,7 +42,7 @@ cidade				VARCHAR2(30) CONSTRAINT nn_loc_cidade NOT NULL,
 estado				VARCHAR2(25)
 );
 
-CREATE UNIQUE INDEX	pk_id_localizacao
+CREATE UNIQUE INDEX pk_id_localizacao
 ON tb_localizacao (id_localizacao);
 
 ALTER TABLE tb_localizacao
@@ -84,7 +84,6 @@ INCREMENT BY		10
 MAXVALUE			9990
 NOCACHE
 NOCYCLE;
-
 --
 -- CRIANDO A TABELA FUNCAO
 --
@@ -111,20 +110,22 @@ id_empregado        NUMBER(6),
 nome                VARCHAR2(20),
 sobrenome           VARCHAR2(25) CONSTRAINT nn_emp_sobrenome NOT NULL,
 email               VARCHAR2(25) CONSTRAINT nn_emp_email NOT NULL,
-telefone            VARCHAR2(20),
-data_admissao		DATE CONSTRAINT nn_emp_dt_adm NOT NULL,
+telefone            VARCHAR2(20), 
+data_admissao 		DATE CONSTRAINT nn_emp_dt_adm NOT NULL,
 id_funcao           VARCHAR2(10) CONSTRAINT nn_emp_funcao NOT NULL,
 salario             NUMBER(8,2), 
-percentual_comissao NUMBER(2,2),
+percentual_comissao NUMBER(2,2), 
 id_gerente          NUMBER(6),
 id_departamento     NUMBER(4),
 
 CONSTRAINT min_emp_salario CHECK(salario > 0),
-CONSTRAINT un_emp_email UNIQUE (email)
+CONSTRAINT un_emp_email UNIQUE(email)
 );
+
 
 CREATE UNIQUE INDEX pk_id_emp 
 ON tb_empregado (id_empregado);
+
 ALTER TABLE tb_empregado 
 ADD( CONSTRAINT pk_id_emp 
 		PRIMARY KEY(id_empregado), 
@@ -136,7 +137,7 @@ ADD( CONSTRAINT pk_id_emp
 		FOREIGN KEY(id_gerente) REFERENCES tb_empregado);
 
 ALTER TABLE tb_departamento
-ADD ( CONSTRAINTfk_gerente_depto
+ADD ( CONSTRAINT fk_gerente_depto
 	FOREIGN KEY(id_gerente) REFERENCES tb_empregado (id_empregado));
 
 CREATE SEQUENCE seq_empregado
@@ -146,30 +147,32 @@ NOCACHE
 NOCYCLE;
 
 
+
 --
 -- CRIANDO A TABELA HISTORICO FUNCAO
 --
 CREATE TABLE tb_historico_funcao(
 id_empregado		NUMBER(6) CONSTRAINT nn_hist_emp_id_emp NOT NULL,
-data_incio			DATE CONSTRAINT nn_hist_emp_dt_inicio NOT NULL,
+data_inicio			DATE CONSTRAINT nn_hist_emp_dt_inicio NOT NULL,
 data_termino		DATE CONSTRAINT nn_hist_emp_dt_termino NOT NULL,
 id_funcao           VARCHAR2(10) CONSTRAINT nn_hist_emp_id_funcao NOT NULL,
 id_departamento     NUMBER(4),
 
-CONSTRAINT ck_hist_emp_data_intervalo CHECK (data_termino > data_incio)
+CONSTRAINT ck_hist_emp_data_intervalo CHECK (data_termino > data_inicio)
 );
 
 CREATE UNIQUE INDEX pk_hist_emp_id_emp
 ON tb_historico_funcao(id_empregado, data_inicio);
-
 ALTER TABLE tb_historico_funcao
-ADD ( CONSTRAINT pk_hist_emp_id_emp
-		PRIMARY KEY(id_empregado, data_inicio),
-	CONSTRAINT fk_hist_funcao_funcao
-		FOREIGN KEY(id_funcao) REFERENCES tb_funcao,
-	CONSTRAINT fk_hist_funcao_emp
-		FOREIGN KEY(id_empregado) REFERENCES tb_empregado,
-	CONSTRAINT fk_hist_funcao_depto
-		FOREIGN KEY (id_departamento) REFERENCES tb_departamento);
+ADD( CONSTRAINT pk_hist_emp_id_emp 
+	 PRIMARY KEY(id_empregado, data_inicio),
+	 CONSTRAINT fk_hist_funcao_funcao 
+	  FOREIGN KEY(id_funcao) REFERENCES tb_funcao,
+	 CONSTRAINT fk_hist_funcao_emp 
+	  FOREIGN KEY(id_empregado) REFERENCES tb_empregado,
+	 CONSTRAINT fk_hist_funcao_depto 
+	  FOREIGN KEY(id_departamento) REFERENCES tb_departamento);
+
+
 
 
