@@ -276,7 +276,223 @@ SELECT id_cliente, nome, sobrenome, dt_nascimento
 FROM tb_cliente
 WHERE REGEXP_LIKE(TO_CHAR(dt_nascimento, 'YYYY'), '196[5-8]$');
 
+--REGEXP_LIKE(x, padrão, [opção_correspondencia])
+--EXEMPLO:
+-- Recupera os clientes cujo nome inicia com J ou j
+-- i: indica correspondencia sem diferenciação de maiusculo e minusculo
 SELECT id_cliente, nome, sobrenome, dt_nascimento
 FROM tb_cliente
 WHERE REGEXP_LIKE(nome, 'j','i');
 
+-- REGEXP_INSTR (x, padrao, [inicio], [ocorrencia], [opcao_de_retorno], [opcao_de_correspondencia])
+-- Procura o padrão em "x"
+
+-- EXEMPLO:
+-- Retornar a posição correspondente a expressão regular
+
+SELECT
+  REGEXP_INSTR('Teste de expressão regular', 'e', 6, 2) AS resultado
+FROM dual;
+
+-- REGEXP_REPLACE(x, padrão, [string_substituto], [inicio], [ocorrencia], [opção_de_correspondencia])
+-- Procura o padrão em "x" e substitui pelo string_substituto
+
+-- EXEMPLO:
+-- Substitui o substring correspondente a expressão regular
+
+SELECT
+  REGEXP_REPLACE('Teste de expressão regular', 'd[[:alpha:]]{1}', 'Oracle')
+AS resultado
+FROM dual;
+
+-- REGEXP_SUBSTR(x, padrão, [inicio], [ocorrencia], [opcão_de_correspondencia])
+-- Obtem um string de "x" correspondente ao padrão
+-- A busca inicia-se na posição deteminada por "inicio"
+
+-- EXEMPLO:
+-- Retorna o substring correspondente a expressão regular
+
+SELECT
+  REGEXP_SUBSTR('Teste de expressão regular','e[[:alpha:]]{8}') AS resultado
+FROM dual;
+
+-- REGEXP_COUNT(x, padrão, [inicio], [opcao_correspondencia])
+-- Procura "padrão" em "x" e obtem o numero de veezes que o "padrão" é encontrado em "x"
+
+--EXEMPLO:
+-- Retorna o numero de vezes que a expressão regular ocorre em um string
+
+SELECT
+  REGEXP_COUNT('teste teste teste expressão regular', 't[[:alpha:]]{4}') AS resultado
+FROM dual;
+
+--
+---- FUNÇÕES AGREGADAS
+--
+
+-- AVG(x)
+-- Obtem o valor medio de "x"
+
+--EXEMPLO
+--  Obter o preco medio dos produtos
+
+SELECt CAST (AVG(preco) AS NUMBER (5,2))
+FROM tb_produtos;
+
+-- CAST E ROUND utilizados para arredondar o numero
+-- (5,2) Cinco digitos no total, com 2 casas reservadas para numero decimal
+SELECT ROUND(AVG(preco), 2)
+FROM tb_produtos;
+
+-- EXEMPLO (02):
+-- Adiciona 2.00 ao preço de cada linha e posteriormente retorna a media desses valores
+
+SELECT ROUND(AVG(preco + 2.00),2)
+FROM tb_produtos;
+
+-- EXEMPLO (03):
+-- Uso da paralvra-chave DISTINCT para excluir valores identicos na coluna PRECO ao calcular a media usando AVG
+
+SELECT AVG(DISTINCT preco)
+FROM tb_produtos;
+
+
+-- COUNT(x) 
+-- Obtem o numeor de linhas retornadas por uma consulta
+
+-- EXEMPLO (01):
+-- Obter o numer ode linhas na tabela TB_PRODUTOS usando COUNT
+
+-- COUNT(coluna), COUNT(pseudo-coluna), COUNT(*), COUNT(1)
+SELECT COUNT(id_produto)
+FROM tb_produtos;
+
+-- Evitar o uso do Asterisco com a função COUNT
+
+-- EXEMPLO (02):
+-- Informa ROWID para COUNT e obtem o numero de linhas da TB_PRODUTOS
+
+SELECT COUNT(ROWID)
+FROM tb_produtos;
+
+--MAX(x) e MIN(x)
+-- Obtem os valores maximo e minimo de "x"
+
+-- EXEMPLO(01):
+-- Obter os valores maximo e minimo da coluna PRECO da TB_PRODUTOS usando MAX e MIN
+
+SELECT MAX(preco), MIN(preco)
+FROM tb_produtos;
+
+-- Selecionando o MAX PRECO e ainda exibindo  o nome do produto
+
+SELECT nm_produto, preco
+FROM tb_produtos
+WHERE preco = (SELECT MAX(preco)
+               FROM tb_produtos);
+
+
+
+-- Permite utilizar MAX E MIN com qualquer tipo de dado, inclusive string e datas
+-- MAX e MIN com string são classificados em ordem alfabetica, com MAX no final, e o MIN no inicio
+-- EXEMPLO (02):
+-- Obter os string maximo e minimo da coluna NM_PRODUTO da TB_PRODUTOS
+
+SELECT MAX(nm_produto), MIN(nm_produto)
+FROM tb_produtos;
+
+-- A data "maxima" ocorre no ponto mais recente no tempo e a data"minima", no ponto mais antigo
+
+-- EXEMPLO (03):
+-- Obter o valor maximo e minimo de DT_NASCIMENTO da TB_CLIENTES
+
+SELECT MAX(dt_nascimento), MIN(dt_nascimento)
+FROM tb_cliente;
+
+-- STDDEV(x)
+-- Obtem o desvio padrão de "x"
+-- O desvio padrão é uma função estatistica, e é definido como a taiz quadrada da variancia
+
+-- EXEMPLO:
+-- Obter o desvio padrão dos valores da coluna PRECO da TB_PRODUTOS
+
+SELECT STDDEV(preco)
+FROM tb_produtos;
+
+-- SUM(x)
+
+--Soma todos os valores presentes em "x", retornando o total
+
+--EXEMPLO:
+-- Obter a soma da coluna PRECO da TB_PRODUTOS
+
+SELECT SUM(preco)
+FROM tb_produtos;
+
+-- VARIANCE(x)
+
+-- Obten a variancia de "x"
+-- A variancia é uma funçã estatistica definida como a dispersão ou variação de um grupo de numeros em uma amostra
+-- É equivalente ao quadrado do desvio padrão
+
+-- EXEMPLO:
+-- Obter a variancia dos valores da coluna PRECO da TB_PRODUTOS
+
+SELECT VARIANCE(preco)
+FROM tb_produtos;
+
+--
+---- AGRUPANDO LINHAS
+--
+
+-- Permite agrupar linhas em uma tabela e obter alguma informação sobre esses grupos de linhas
+
+-- EXEMPLO:
+-- Obter o preco medio dos diferentes tipos de produtos da TB_PRODUTOS
+-- Facilitador:
+-- -- Utilização do GROUP BY para agrupar as linhas semelhantes
+-- -- A clausula GROUP BY é utilizada pra agrupar linhas em blocos com um valor comum de coluna
+
+-- EXEMPLO:
+-- Agrupar as linhas da TB_PRODUTOS em blocos com o mesmo valor de ID_TIPO_PRODUTO
+
+SELECT id_tipo_produto
+FROM tb_produtos
+GROUP BY id_tipo_produto;
+
+
+-- GROUP BY
+-- Usando varias colunas em um grupo, ou seja, permite especificar varias colunas em uma clausula GROUP BY
+
+-- EXEMPLO
+-- Inclusão das colunas ID_PRODUTO e ID_CLIENTE da TB_COMPRAS em uma clausula GROUP BY
+
+SELECT id_produto, id_cliente
+FROM tb_compras
+GROUP BY id_produto, id_cliente;
+
+-- Usando grupos del inhas com função agregada, permitindo efetuar o calculo no grupo de linhas em cada bloco,
+-- retornando um valor por bloco
+
+-- EXEMPLO (01):
+-- Obter o numero de linhas com o mesmo valor de ID_TIPO_PRODUTO da TB_PRODUTOS
+
+SELECT id_tipo_produto, COUNT(ROWID)
+FROM tb_produtos
+GROUP BY id_tipo_produto
+ORDER BY id_tipo_produto;
+
+-- EXEMPLO (02):
+-- Obter o preço medio dos diferentes tipos de produtos da TB_PRODUTOS
+
+SELECT id_tipo_produto, AVG(preco)
+FROM tb_produtos
+GROUP BY id_tipo_produto
+ORDER BY id_tipo_produto;
+
+
+SELECT  p.id_tipo_produto, tp.nm_tipo_produto, ROUND(AVG(p.preco), 2) "Media Preco"
+FROM tb_produtos p
+INNER JOIN tb_tipos_produtos tp ON (p.id_tipo_produto = tp.id_tipo_produto)
+GROUP BY p.id_tipo_produto, tp.nm_tipo_produto 
+ORDER BY id_tipo_produto;
