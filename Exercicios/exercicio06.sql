@@ -1,3 +1,11 @@
+/*
+
+EXERCICIO 06 - LAB DE BANCO DE DADOS
+NOME: ARIELSON DA SILVA BRAGA
+
+*/
+
+
 -- Criando tabelas
 
 CREATE TABLE tb_mulher(
