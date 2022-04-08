@@ -101,3 +101,53 @@ FROM tb_homem h, tb_mulher m
 ORDER BY h.nome_homem;
 
 
+-- 4 - As questões a seguir utilizarão OUTHER JOINS
+-- a 
+
+SELECT h.nome_homem || ' casado ' || NVL(m.nome_mulher, ' com ninguem')
+FROM tb_homem h
+LEFT OUTER JOIN tb_mulher m ON (h.id_mulher = m.id_mulher)
+ORDER BY h.nome_homem;
+
+-- b 
+
+SELECT m.nome_mulher || ' casada ' || NVL(h.nome_homem,  ' com ninguem')
+FROM tb_homem h
+RIGHT OUTER JOIN tb_mulher m ON (h.id_mulher = m.id_mulher)
+ORDER BY h.nome_homem;
+
+-- c 
+SELECT h.nome_homem || ' casado ' || NVL(m.nome_mulher, ' com ninguem')
+FROM tb_homem h
+LEFT OUTER JOIN tb_mulher m ON (h.id_mulher = m.id_mulher)
+ORDER BY h.nome_homem;
+
+-- d
+
+SELECT m.nome_mulher || ' casada ' || NVL(h.nome_homem,  ' com ninguem')
+FROM tb_homem h
+RIGHT OUTER JOIN tb_mulher m ON (h.id_mulher = m.id_mulher)
+ORDER BY h.nome_homem;
+
+-- e - 
+SELECT m.nome_mulher || ' casada ' || NVL(h.nome_homem,  ' com ninguem')
+FROM tb_homem h
+RIGHT OUTER JOIN tb_mulher m USING (id_mulher)
+ORDER BY h.nome_homem;
+
+SELECT h.nome_homem || ' casado ' || NVL(m.nome_mulher, ' com ninguem')
+FROM tb_homem h
+LEFT OUTER JOIN tb_mulher m ON (h.id_mulher = m.id_mulher)
+ORDER BY h.nome_homem;
+
+-- f - 
+SELECT NVL(h.nome_homem,  ' Ninguem') || ' casado ' || NVL(m.nome_mulher, ' com ninguem')
+FROM tb_homem h
+FULL OUTER JOIN tb_mulher m ON (h.id_mulher = m.id_mulher)
+ORDER BY h.nome_homem;
+
+-- g - 
+SELECT NVL(h.nome_homem,  ' Ninguem') || ' casado ' || NVL(m.nome_mulher, ' com ninguem')
+FROM tb_homem h
+FULL OUTER JOIN tb_mulher m USING (id_mulher)
+ORDER BY h.nome_homem;
