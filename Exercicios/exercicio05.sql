@@ -39,11 +39,7 @@ ORDER BY Diferença DESC, ds_funcao ASC;
 -- EX05
 
 
-DEFINE &v_aliquota = 5;
-SELECT id_empregado, nome ,salario, salario * 12 AS "Anual", &v_aliquota, &v_aliquota * (salario * 12)
+DEFINE v_aliquota = 5;
+SELECT id_empregado, nome ,salario, salario * 12 AS "Salario Anual", &v_aliquota, &v_aliquota * (salario * 12) AS "Aliquota"
 FROM tb_empregado;
 
-
-DEFINE &v_aliquota = 5;
-SELECT id_empregado, nome ,salario, salario * 12 AS "Anual", 5 AS "ALIQUOTA", (salario * 12) * 5
-FROM tb_empregado;
