@@ -496,3 +496,57 @@ FROM tb_produtos p
 INNER JOIN tb_tipos_produtos tp ON (p.id_tipo_produto = tp.id_tipo_produto)
 GROUP BY p.id_tipo_produto, tp.nm_tipo_produto 
 ORDER BY id_tipo_produto;
+
+
+
+-- EXEMPLO (03):
+-- Obter a variância do preço dos produtos para cada valor de ID_TIPO_PRODUTO
+
+SELECT id_tipo_produto, VARIANCE(preco) 
+FROM tb_produtos 
+GROUP BY id_tipo_produto 
+ORDER BY id_tipo_produto; 
+
+-- EXEMPLO (04):
+-- Inclusão de uma chamada de função agregada na cláusula ORDER BY 
+
+SELECT VARIANCE(preco) 
+FROM tb_produtos 
+GROUP BY id_tipo_produto 
+ORDER BY VARIANCE(preco);
+
+-- Erros - utilizaçã incorreta
+
+SELECT id_tipo_produto, AVG(preco) 
+FROM tb_produtos; 
+
+-- EXEMPLO:
+
+SELECT id_tipo_produto, AVG(preco)
+FROM tb_produtos
+WHERE AVG(PRECO) > 20.00
+GROUP BY id_tipo_produto;
+
+-- EXEMPLO: Having
+
+SELECT id_tipo_produto, AVG(preco)
+FROM tb_produtos
+GROUP BY id_tipo_produto
+HAVING AVG(preco) > 20.00;
+
+-- EXEMPLO - WHERE e GROUP BY juntas
+SELECT id_tipo_produto, AVG(preco)
+FROM tb_produtos
+WHERE preco < 15.00
+GROUP BY id_tipo_produto
+ORDER BY id_tipo_produto;
+
+-- EXEMPLO - WHERE, GROUP BY, HAVING juntas
+
+SELECT id_tipo_produto, AVG(preco)
+FROM tb_produtos
+WHERE preco < 15.00
+GROUP BY id_tipo_produto
+HAVING AVG(preco) > 13.00
+ORDER BY id_tipo_produto;
+
