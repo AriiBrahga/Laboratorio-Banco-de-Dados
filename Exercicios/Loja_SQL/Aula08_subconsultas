@@ -1,0 +1,255 @@
+-- Subconsultas
+
+--Existem 2 tipo de subconsultas
+-- unica linha:
+-- Várias Linhas:
+
+-- Além disso existem 3 tipos de subcontultas que podem retornar uma ou várias linhas:
+-- Correlacionadas:
+-- Aninhadas:
+
+
+
+-- Subconsultas em uma linha
+-- É aquela que retorna zero ou uma linha para instrução SQL externa
+-- Pode ser inserida em uma clausula WHERE, HAVING, FROM de uma instrução SELECT
+
+-- EXEMPLO (WHERE):
+SELECT nome, sobrenome
+FROM tb_cliente
+WHERE id_cliente = (SELECT id_cliente
+                    FROM tb_cliente
+                    WHERE sobrenome = 'Blue');
+                    
+-- Vamos analisar essa consulta, a subconsulta na cláusula WHERE é:
+SELECT id_cliente
+FROM tb_cliente
+WHERE sobrenome = 'Blue';
+-- Essa subconsutla é executada primeiro e retorna o ID_CLIENTE da coluna cujo valor do SOBRENOME seja 'Blue'
+-- O valor do ID_CLIENTE para essa linha é 5, o qual é passado para a clausula WHERE da consulta externa
+
+
+-- EXEMPLO:
+-- Obter o preço médio dos produos, o qual é passado para a clausula WHERE da consulta externa. A consulta externa retorna
+-- os valores de ID_PRODUTO, NM_PRODUTO e PRECO dos produtos cujo preço é maior do que a méida de preços
+SELECT id_produto, nm_produto, preco
+FROM tb_produtos
+WHERE preco > (SELECT AVG(preco)
+               FROM tb_produtos);
+
+-- O exemplo a seguir apresenta a decomposição da consulta anterior, executando a subconsulta separadamente
+SELECT AVG(preco)
+FROM tb_produtos;
+
+-- Subconsulta em uma clausula HAVING
+-- HAVING: usada para filtrar grupos de linhas
+-- Permite inserir uma subconsulta na cláusula HAVING de uma consulta externa
+-- Possibilita filtrar grupos de linhas com base no resultado retornado por sua subconsulta
+
+-- EXEMPLO
+-- Recupera o valor do ID_TIPO_PRODUTO e o preço médio dos produtos cujo preço médio é menor do que o máximo da média dos grupos do mesmo tipo de produto
+SELECT id_tipo_produto, AVG(preco)
+FROM tb_produtos
+GROUP BY id_tipo_produto
+HAVING AVG(preco) < (SELECT MAX (AVG(preco))
+                    FROM tb_produtos
+                    GROUP BY id_tipo_produto)
+ORDER BY id_tipo_produto;
+
+-- Subconsulta em FROM
+-- EXEMPLO (01):
+-- Recuperar os produtos cujo valor do ID_PRODUTO seja menor do que 3
+
+SELECT id_produto
+FROM (SELECT id_produto
+      FROM tb_produtos
+      WHERE id_produto < 3);
+
+-- EXEMPLO (02):
+-- Recuperar os valores de ID_PRODUTO e PRECO da TB_PRODUTOS na consulta externa e a subconsulta recupera o numero de vezes que um produto foi comprado
+
+SELECT p.id_produto, preco, dados_compra.count_produto
+FROM tb_produtos p, (SELECT id_produto, COUNT(id_produto) count_produto
+                     FROM tb_compras
+                     GROUP BY id_produto) dados_compra
+WHERE p.id_produto = dados_compra.id_produto;
+
+-- Subconsultas de várias linhas
+-- EXEMPLO:
+SELECT id_produto, nm_produto
+FROM tb_produtos
+WHERE id_produto IN(1,2,3);
+
+
+-- EXEMPLO (01):
+-- Verificar se um valor de ID_PRODUTO se encontra na lista de valores retornada pela subconsulta
+SELECT id_produto, nm_produto
+FROM tb_produtos
+WHERE id_produto IN (SELECT id_produto
+                     FROM tb_produtos
+                     WHERE nm_produto LIKE '%e%');
+                     
+                     
+-- Usando NOT IN
+-- EXEMPLO (02):
+-- Obter os produtos que não estão na TB_COMPRAS
+
+SELECT id_produto, nm_produto
+FROM tb_produtos
+WHERE id_produto NOT IN (SELECT id_produto
+                         FROM tb_compras);
+
+
+-- Usando ANY
+-- EXEMPLO:
+-- Obter os funcionarios cujo salário seja menor do que QUALQUER um dos salários mais baixos da TB_GRADES_SALARIOS
+
+SELECT id_funcionario, nome, salario
+FROM tb_funcionarios
+WHERE salario < ANY (SELECT base_salario
+                     FROM tb_grades_salarios);
+
+-- Usando ALL
+-- EXEMPLO:
+-- Obter os funcionarios cujo salário seja superior a TODOS os salários mais alto da TB_GRADES_SALARIOS
+
+SELECT id_funcionario, nome, salario
+FROM tb_funcionarios
+WHERE salario > ALL (SELECT teto_salario
+                     FROM tb_grades_salarios);
+
+
+-- Possibilidade de escrever subconsultas que retornam várias colunas
+-- EXEMPLO:
+
+SELECT id_produto, id_tipo_produto, nm_produto, preco
+FROM tb_produtos
+WHERE (id_tipo_produto, preco) IN (SELECT id_tipo_produto, MIN(preco)
+                                   FROM tb_produtos
+                                   GROUP BY id_tipo_produto);
+--                                   
+-- Subconsultas Correlacionadas
+--
+
+-- EXEMPLO: 
+-- Recuperar todos os produtos que possuem preço maior do que a média para o tipo de produto
+SELECT id_produto, id_tipo_produto, nm_produto, preco
+FROM tb_produtos externa
+WHERE preco > (SELECT AVG(preco)
+               FROM tb_produtos interna
+               WHERE interna.id_tipo_produto = externa.id_tipo_produto);
+  
+
+-- Usando o EXISTS e NOT EXISTS em uma subconsulta correlacionada 
+-- O operador EXISTS verifica a existência de linhas retornadas por uma subconsulta
+-- Embora voce possa usar EXISTS em subconsultas não correlacionadas, em geral ele é utilizado em subconsultas correlacionadas
+-- NOT EXISTS executa a lógica oposta de EXISTS
+
+-- EXEMPLO:
+-- Recuperar os funcionários que gerenciam outros funcionarios
+SELECT id_funcionario, nome, sobrenome
+FROM tb_funcionarios externa
+WHERE EXISTS (SELECT id_funcionario
+              FROM tb_funcionarios interna
+              WHERE interna.id_gerente = externa.id_funcionario);
+
+
+-- Usando EXISTS em uma subconsulta correlacionada
+-- EXEMPLO:
+-- Reescrever o exemplo anterior com a subconsulta retornando o valor literal 1
+
+SELECT id_funcionario, nome, sobrenome
+FROM tb_funcionarios externa
+WHERE EXISTS (SELECT 1
+              FROM tb_funcionarios interna
+              WHERE interna.id_gerente = externa.id_funcionario);
+
+-- Usando NOT EXISTS em uma subconsulta correlacionada
+-- EXEMPLO:
+-- Recuperar os produtos que não foram comprados
+
+SELECT id_produto, nm_produto
+FROM tb_produtos externa
+WHERE NOT EXISTS (SELECT 1
+                  FROM tb_compras interna
+                  WHERE interna.id_produto = externa.id_produto);
+                  
+-- Subconsultas OBSERVAÇÃO
+
+-- EXISTS e NOT EXISTS versus IN e NOT IN
+-- Operador IN é usado para verificar se um valor está contido em uma lista
+-- EXISTS verifica apenas a existência de linhas, enquanto que IN verifica os valores reais
+
+-- Observação:
+-- Normalmente, EXISTS oferece um desempenho melhor do que IN  em subconsultas
+-- Cuidado: 
+-- Ao escrever consultas que utilizam NOT EXISTS ou NOT IN
+-- Quando a lista de valores contém um valor nulo, NOT EXISTS retorna VERDADEIRO, mas NOT IN retorna FALSO
+
+-- EXEMPLO (01):
+-- Recuperar os tipos de produtos que NÃO têm produtos desse tipo na TB_PRODUTOS
+
+SELECT id_tipo_produto ,nm_tipo_produto
+FROM tb_tipos_produtos externa
+WHERE NOT EXISTS (SELECT 1
+                  FROM tb_produtos interna
+                  WHERE interna.id_tipo_produto = externa.id_tipo_produto);
+                  
+-- EXEMPLO (02):
+-- Reescrever a consulta anterior para utilizar o NOT IN
+-- Observe que nenhuma linha é retornada
+
+SELECT id_tipo_produto, nm_tipo_produto
+FROM tb_tipos_produtos
+WHERE id_tipo_produto NOT IN (SELECT id_tipo_produto
+                              FROM tb_produtos);
+                              
+                              
+-- Qual seria a solução adequada para o uso de NOT IN?
+
+-- EXEMPLO (03):
+-- Fazendo uso da função NVL para converter valores nulos em valores não nulos
+-- NVL é utilizada para converter valores nulos de ID_TIPO_PRODUTO em 0
+
+SELECT id_tipo_produto, nm_tipo_produto
+FROM tb_tipos_produtos
+WHERE id_tipo_produto NOT IN (SELECT NVL(id_tipo_produto, 0)
+                              FROM tb_produtos);
+                              
+-- Subconsultas Aninhadas
+
+-- EXEMPLO:
+-- Contém 3 consultas (uma subconsulta aninhada, uma subconsulta e a consulta externa)
+
+SELECT id_tipo_produto, AVG(preco)
+FROM tb_produtos
+GROUP BY id_tipo_produto
+HAVING AVG(preco) < (SELECT MAX(AVG(preco))
+                     FROM tb_produtos
+                     WHERE id_produto IN (SELECT id_produto
+                                          FROM tb_compras
+                                          WHERE quantidade > 1)
+                     GROUP BY id_tipo_produto)
+ORDER BY id_tipo_produto;
+
+-- Subconsultas (UPDATE/DELETE)
+
+-- EXEMPLO:
+-- Definir o salário do funcionário nº4 como a média dos tetos salariais retornados por uma subconsulta
+
+UPDATE tb_funcionarios
+SET salario = (SELECT AVG(teto_salario)
+               FROM tb_grades_salarios)
+WHERE id_funcionario = 4;
+
+ROLLBACK;
+
+-- EXEMPLO:
+-- Remover os funcionarios cujo valor salarial seja superior do que a média dos tetos salarias retornados por uma subconsulta
+
+DELETE 
+FROM tb_funcionarios
+WHERE salario > (SELECT AVG(teto_salario)
+                 FROM tb_grades_salarios);
+
+ROLLBACK;
