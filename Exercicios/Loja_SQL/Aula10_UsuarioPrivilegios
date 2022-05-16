@@ -1,0 +1,187 @@
+-- EXEMPLO (01):
+
+-- Criando um usuario nomeado de "jean" com a senha "master"
+
+CREATE USER jean IDENTIFIED BY master;
+
+-- EXEMPLO (02):
+
+-- Criando um usuario chamado de "henrique", especificando um tablespace padrão e um temporário
+
+CREATE USER henrique IDENTIFIED BY 0800
+  DEFAULT TABLESPACE users
+  TEMPORARY TABLESPACE temp;
+  
+  
+-- EXEMPLO (03):
+
+-- Concedendo a permissão CREATE SESSION para o usuário "jean"
+
+GRANT CREATE SESSION TO jean;
+
+-- Dessa forma, o usuario "jean" a partir de agora, poderá se conectar-ser no BD
+
+-- EXEMPLO (04):
+
+-- Criando os usuarios "fernando" e "sonia", concedendo a eles o privilegio de CREATE SESSION
+
+CREATE USER fernando IDENTIFIED BY fernando1234;
+CREATE USER sonia IDENTIFIED BY sonia1234;
+GRANT CREATE SESSION TO fernando, sonia;
+
+-- EXEMPLO (05):
+
+-- Alterando a senha do usuario "jean" para "senha123alterada" 
+
+ALTER USER jean IDENTIFIED BY senha123alterada;
+
+-- EXEMPLO (06):
+
+-- Excluindo um usuario por meio da instrução DROP USER
+-- Através do usuario "system" (conectado), utilizamos o DROP USER para excluir "jean"
+
+DROP USER jean;
+
+-- A palavra-chave CASCADE deve ser adicionada depois do nome do usuario na instrução acima, caso o esquema desse usuario contenha objetos, como tabelas, por exemplo.
+-- Entretanto, antes de fazer isso, você deve certificar-se de que nenhum usuario precise acessar esses objetos
+
+
+
+--
+-- Privilégios
+--
+
+-- EXEMPLO (01):
+
+-- Concedendo privilégios de sistema ao usuario "fernando"
+
+GRANT CREATE SESSION,
+      CREATE USER,
+      CREATE TABLE TO fernando;
+      
+-- Pdemos usar WITH ADMIN OPTION, permitindo que o usuario conceda um privilégio a outro usuário
+
+-- EXEMPLO (02):
+
+-- Concedendo a "fernando" o privilégio EXECUTE ANY PROCEDURE com a opção ADMIN
+
+GRANT EXECUTE ANY PROCEDURE TO fernando WITH ADMIN OPTION;
+
+-- Nesse caso, o privilégio EXECUTE ANY PROCEDURE poderá ser concedido por "fernando" a outro usuario
+
+-- EXEMPLO (03):
+
+-- Necessidade de realizar a conexão como "fernando"
+
+GRANT EXECUTE ANY PROCEDURE TO sonia;
+
+-- EXEMPLO (04):
+
+-- Retornando a conexão com o usuário privilegiado (system)
+-- Concedendo o privilégio de EXECUTE ANY PROCEDURE a todos os usuário (PUBLIC*)
+
+GRANT EXECUTE ANY PROCEDURE TO PUBLIC;
+
+-- EXEMPLO (05):
+
+SELECT *
+FROM user_sys_privs
+ORDER BY privilege;
+
+-- EXEMPLO (06):
+
+CREATE USER roberto IDENTIFIED BY roberto1234;
+
+-- EXEMPLO (07):
+-- Forcando erro no drop table
+
+-- REVOKE
+-- EXEMPLO (08):
+
+REVOKE CREATE TABLE FROM fernando;
+
+-- EXEMPLO (09):
+
+GRANT SELECT, INSERT, UPDATE ON tb_produtos TO fernando;
+GRANT SELECT ON tb_funcionarios TO fernando;
+
+-- EXEMPLO (10):
+
+GRANT UPDATE(sobrenome, salario)
+ON tb_funcionarios TO fernando;
+
+-- EXEMPLO (11):
+
+GRANT SELECT ON tb_cliente TO fernando WITH GRANT OPTION;
+
+-- EXEMPLO (12):
+
+GRANT SELECT ON loja.tb_cliente TO sonia;
+
+-- EXEMPLO (13):
+
+SELECT *
+FROM user_tab_privs_made
+WHERE table_name = 'TB_PRODUTOS';
+
+-- EXEMPLO (14):
+
+SELECT * 
+FROM user_col_privs_made;
+
+-- EXEMPLO (15):
+
+SELECT * 
+FROM user_tab_privs_recd;
+
+-- EXEMPLO (16):
+
+SELECT *
+FROM user_col_privs_recd;
+
+-- EXEMPLO (17):
+
+SELECT *
+FROM loja.tb_cliente;
+
+
+-- EXEMPLO (18):
+
+SELECT *
+FROM loja.tb_compras;
+
+
+--
+-- SINÔNIMOS
+--
+
+-- EXEMPLO (01):
+
+GRANT CREATE SYNONYM TO fernando;
+
+-- EXEMPLO (02):
+
+CREATE SYNONYM clientes FOR loja.tb_cliente;
+
+-- EXEMPLO (03):
+
+SELECT *
+FROM clientes; -- sinônimo para loja.tb_cliente;
+
+-- EXEMPLO (04):
+
+-- system
+GRANT CREATE PUBLIC SYNONYM TO loja;
+
+-- loja
+CREATE PUBLIC SYNONYM produtos FOR loja.tb_produtos;
+
+-- EXEMPLO (05):
+
+SELECT * 
+FROM produtos;
+
+-- EXEMPLO (06):
+
+SELECT * 
+FROM produtos;
