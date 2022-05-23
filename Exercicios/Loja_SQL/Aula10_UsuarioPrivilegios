@@ -185,3 +185,496 @@ FROM produtos;
 
 SELECT * 
 FROM produtos;
+
+
+--
+-- DCL
+--
+
+-- Revogando Privilégios
+
+-- EXEMPLO (01):
+-- conectar-se como "loja" e revogar de "fernando" o privilégio INSERT na TB_PRODUTOS
+
+REVOKE INSERT ON produtos FROM fernando;
+
+-- EXEMPLO (02):
+-- Revogando de "fernando" o privilégio de SELECT na TB_CLIENTES
+-- Quando revogamos SELECT ON  loja.tb_cliente de "fernando", que já passou esse privilégio a "sonia', "sonia" também perdera o privilégio
+
+REVOKE SELECT ON loja.tb_cliente FROM fernando;
+
+--
+-- Atribuições
+--
+
+-- EXEMPLO (01):
+
+-- Conecte-se como "system"
+-- Conceda os privilégios necessario ao usuário "loja"
+
+GRANT CREATE ROLE TO loja;
+GRANT CREATE USER TO loja WITH ADMIN OPTION;
+
+-- EXEMPLO (02):
+-- Uma atribuição é criada por meio da instrução CREATE ROLE
+-- Conecte-se como "loja" e crie as tres atribuições (gerenciamento_produtos, gerenciamento_funcionarios e gerenciamento_global)
+-- Observe que "gerenciamento_global" possui a senha denominada "senha_gerenciamento"
+
+CREATE ROLE gerenciamento_produtos;
+CREATE ROLE gerenciamento_funcionarios;
+CREATE ROLE gerenciamento_global IDENTIFIED BY senha_gerenciamento;
+
+
+-- EXEMPLO (03):
+
+-- Concedendo privilégios necessarios as atribuições "gerenciamento_produtos" e "gerenciamento_funcionarios" e por sua vez, essas duas atribuições são concedidas à "gerenciamento_global"
+
+GRANT SELECT, INSERT, UPDATE, DELETE
+  ON tb_tipos_produtos TO gerenciamento_produtos;
+GRANT SELECT, INSERT, UPDATE, DELETE
+  ON tb_produtos TO gerenciamento_produtos;
+GRANT SELECT, INSERT, UPDATE, DELETE
+  ON tb_grades_salarios TO gerenciamento_funcionarios;
+GRANT SELECT, INSERT, UPDATE, DELETE
+  ON tb_funcionarios TO gerenciamento_funcionarios;
+GRANT CREATE USER TO gerenciamento_funcionarios;
+GRANT gerenciamento_produtos, gerenciamento_funcionarios TO gerenciamento_global;
+
+-- EXEMPLO (04):
+-- Concedendo a atribuição "gerenciamento_global" a "fernando"
+
+GRANT gerenciamento_global TO fernando;
+
+-- EXEMPLO (05):
+-- Conecte-se como "fernando"
+-- Verificando quais atribuições foram concedidas a um usuário consultando user_role_privs
+
+SELECT *
+FROM user_role_privs;
+
+-- EXEMPLO (06):
+-- O usuário que cria uma atribuição também recebe essa atribuição
+-- Conecte-se como "loja" e consulte user_role_privs
+
+SELECT * 
+FROM user_role_privs;
+
+-- EXEMPLO (07):
+-- Verificando os privilégios de sistem concedidos a uma determinada atribuição
+-- Por meio do usuário "loja", recupere as linhas de role_sys_privs
+-- Note que a atribuição RESOURCE Possui diversos privilégios atribuidos
+
+SELECT *
+FROM role_sys_privs
+ORDER BY privilege;
+
+
+-- EXEMPLO (08):
+-- Verificando os privilégios de objeto concedidos a uma atribuição consultando role_tab_privs, onde a atribuição é "gerenciamento_funcionarios"
+
+SELECT *
+FROM role_tab_privs
+WHERE ROLE = 'GERENCIAMENTO_FUNCIONARIOS'
+ORDER BY table_name;
+
+-- EXEMPLO (09):
+-- Utilizando os privilégios concedidos a uma atribuição
+
+SELECT p.nm_produto, tp.nm_tipo_produto AS tipos_produtos
+FROM loja.tb_produtos p, loja.tb_tipos_produtos tp
+WHERE p.id_tipo_produto = tp.id_tipo_produto;
+
+-- EXEMPLO (10):
+
+ALTER USER fernando DEFAULT ROLE ALL EXCEPT gerenciamento_global;
+
+-- EXEMPLO (11):
+
+SET ROLE gerenciamento_global IDENTIFIED BY senha_gerenciamento;
+
+
+-- EXEMPLO (12):
+
+-- Podemos configurar a atribuição como "nenhuma"
+
+SET ROLE NONE;
+
+-- EXEMPLO (13):
+-- Podemos configurar a atribuição como "todas as atribuições", exceto "gerenciamento_global"
+
+SET ROLE ALL EXCEPT gerenciamento_global;
+
+-- EXEMPLO (14):
+
+REVOKE gerenciamento_global FROM fernando;
+
+-- EXEMPLO (15):
+
+REVOKE ALL ON tb_produtos FROM gerenciamento_produtos;
+REVOKE ALL ON tb_tipos_produtos FROM gerenciamento_produtos;
+
+
+-- EXEMPLO (16):
+
+DROP ROLE gerenciamento_global;
+DROP ROLE gerenciamento_produtos;
+DROP ROLE gerenciamento_funcionarios;
+
+-- 
+-- Auditoria
+--
+
+-- Auditoria (Nivel Alto)
+-- Auditoria (Nivel Detalhado)
+
+-- EXEMPLO (01):
+
+GRANT AUDIT SYSTEM TO loja;
+GRANT AUDIT ANY TO loja;
+
+-- EXEMPLO (02):
+
+AUDIT CREATE TABLE;
+
+CREATE TABLE tb_teste_1(
+id_teste        INTEGER
+);
+
+-- EXEMPLO (03):
+
+SELECT username, extended_timestamp, audit_option
+FROM user_audit_trail
+WHERE audit_option = 'CREATE TABLE';
+
+
+
+SELECT username, extended_timestamp, owner, obj_name, action_name
+FROM user_audit_trail
+WHERE action_name = 'CREATE TABLE'
+ORDER BY 2 DESC;
+
+
+-- EXEMPLO (04):
+
+AUDIT SELECT TABLE BY loja;
+
+-- EXEMPLO (05):
+
+AUDIT INSERT TABLE,
+      UPDATE TABLE,
+      DELETE TABLE BY loja,fernando;
+      
+-- EXEMPLO (06):
+
+AUDIT SELECT ON loja.tb_produtos;
+
+-- EXEMPLO (07):
+
+AUDIT ALL ON loja.tb_funcionarios;
+
+-- EXEMPLO (08):
+
+AUDIT UPDATE TABLE BY fernando WHENEVER NOT SUCCESSFUL;
+AUDIT INSERT TABLE WHENEVER NOT SUCCESSFUL;
+
+-- EXEMPLO (09):
+
+AUDIT CREATE USER, DROP USER WHENEVER SUCCESSFUL;
+
+-- EXEMPLO (10):
+
+AUDIT CREATE USER,
+      DROP USER BY loja WHENEVER SUCCESSFUL;
+    
+    
+-- EXEMPLO (11):
+
+AUDIT SELECT ON loja.tb_produtos BY SESSION;
+AUDIT DELETE ON loja.tb_funcionarios BY ACCESS;
+AUDIT INSERT, UPDATE ON loja.tb_funcionarios BY ACCESS;
+
+
+
+-- 
+-- Tabelas
+--
+
+-- Consultando o Dicionario d eDados
+
+-- Descreve as tabelas de propriedade do usuário
+SELECT *
+FROM user_tables;
+
+-- Exibir tipos de objetos distintos de propriedade do usuário
+
+SELECT DISTINCT(object_type)
+FROM user_objects;
+
+-- Exibir tabelas, visões, sinônimos e sequêncas de propriedade do usuário
+
+SELECT *
+FROM user_catalog;
+
+
+-- EXEMPLO (01):
+
+CREATE TABLE tb_status_encomenda_2(
+id_status_encomenda           INTEGER CONSTRAINT pk_status_enc_2 PRIMARY KEY,
+status                        VARCHAR2(10),
+ultima_modificacao            DATE DEFAULT SYSDATE
+
+);
+
+-- EXEMPLO (02):
+
+CREATE GLOBAL TEMPORARY TABLE tb_status_encomenda_temp(
+id_status_encomenda           INTEGER,
+status                        VARCHAR2(10),
+ultima_modificacao            DATE DEFAULT SYSDATE
+)
+
+ON COMMIT PRESERVE ROWS;
+
+-- EXEMPLO (03):
+
+INSERT INTO tb_status_encomenda_temp(id_status_encomenda, status)
+VALUES (1, 'Novo');
+
+
+-- EXEMPLO (04):
+
+CREATE TABLE tb_funcionarios_teste
+AS
+  SELECT id_funcionario, nome, salario
+  FROM tb_funcionarios
+  WHERE id_funcionario = 3;
+  
+
+-- EXEMPLO (05):
+
+SELECT table_name,
+       tablespace_name,
+       temporary
+FROM user_tables
+WHERE table_name IN ('TB_STATUS_ENCOMENDA_2', 'TB_STATUS_ENCOMENDA_TEMP');
+
+-- EXEMPLO (06):
+
+SELECT column_name, data_type, data_length, data_precision, data_scale
+FROM user_tab_columns
+WHERE table_name = 'TB_PRODUTOS';
+
+-- EXEMPLO (07):
+
+ALTER TABLE tb_status_encomenda_2
+ADD modificado_por INTEGER;
+
+-- EXEMPLO (08):
+
+ALTER TABLE tb_status_encomenda_2
+ADD criado_inicialmente DATE DEFAULT SYSDATE NOT NULL;
+
+-- EXEMPLO (09):
+
+ALTER TABLE tb_grades_salarios
+ADD(media_salarial AS ((base_salario + teto_salario)/2));
+
+SELECT *
+FROM tb_grades_salarios;
+
+-- EXEMPLO (10):
+
+ALTER TABLE tb_status_encomenda_2
+MODIFY status VARCHAR2(15);
+
+-- EXEMPLO (11):
+
+ALTER TABLE tb_status_encomenda_2
+MODIFY id_status_encomenda NUMBER(5);
+
+-- EXEMPLO (13):
+
+ALTER TABLE tb_status_encomenda_2
+MODIFY ultima_modificacao DEFAULT SYSDATE -1;
+
+-- EXEMPLO (12):
+
+
+ALTER TABLE tb_status_encomenda_2
+MODIFY status CHAR(15);
+
+-- EXEMPLO (14):
+
+ALTER TABLE tb_status_encomenda_2
+DROP COLUMN criado_inicialmente;
+
+-- EXEMPLO (15):
+
+ALTER TABLE tb_status_encomenda_2
+ADD CONSTRAINT ck_status_encomenda_2
+  CHECK(status IN ('COLOCADO', 'PENDENTE', 'ENVIADO'));
+
+-- EXEMPLO (16):
+
+INSERT INTO tb_status_encomenda_2(id_status_encomenda,
+                                  status,
+                                  ultima_modificacao,
+                                  modificado_por)
+VALUES
+(2, 'PENDENTE', '01-MAY-2013', 1);
+
+-- EXEMPLO (17):
+
+INSERT INTO tb_status_encomenda_2(id_status_encomenda,
+                                  status,
+                                  ultima_modificacao,
+                                  modificado_por)
+VALUES
+(3, 'OUTRO', '01-MAY-2013', 1);
+
+-- EXEMPLO (18):
+
+ALTER TABLE tb_status_encomenda_2
+MODIFY status CONSTRAINT nn_status_encomenda_2 NOT NULL;
+
+-- EXEMPLO (19):
+
+ALTER TABLE tb_status_encomenda_2
+MODIFY modificado_por
+  CONSTRAINT nn_status_encomenda_2_mod NOT NULL;
+  
+-- EXEMPLO (20):
+
+ALTER TABLE tb_status_encomenda_2
+MODIFY ultima_modificacao NOT NULL;
+
+-- EXEMPLO (21):
+
+ALTER TABLE tb_status_encomenda_2
+DROP COLUMN modificado_por;
+
+ALTER TABLE tb_status_encomenda_2
+ADD CONSTRAINT fk_status_enc_2_modif_por
+    modificado_por REFERENCES tb_funcionarios(id_funcionario);
+    
+-- EXEMPLO (22): ----- CAI NA PROVA - SLIDE 130
+
+ALTER TABLE tb_status_encomenda_2
+DROP COLUMN modificado_por;
+
+ALTER TABLE tb_status_encomenda_2
+ADD CONSTRAINT fk_status_enc_2_modif_por
+    modificado_por REFERENCES tb_funcionarios(id_funcionario)
+    ON DELETE CASCADE;
+    
+-- EXEMPLO (23):
+
+ALTER TABLE tb_status_encomenda_2
+DROP COLUMN modificado_por;
+
+ALTER TABLE tb_status_encomenda_2
+ADD CONSTRAINT fk_status_enc_2_modif_por
+    modificado_por REFERENCES tb_funcionarios(id_funcionario)
+    ON DELETE SET NULL;
+    
+-- EXEMPLO (24):
+
+ALTER TABLE tb_status_encomenda_2
+ADD CONSTRAINT uq_status_encomenda_2_status UNIQUE(status);
+
+-- EXEMPLO (25):
+
+ALTER TABLE tb_status_encomenda_2
+DROP CONSTRAINT uq_status_encomenda_2_status;
+
+-- EXEMPLO (26):
+
+ALTER TABLE tb_status_encomenda_2
+ADD CONSTRAINT uq_status_encomenda_2_status UNIQUE(status) DISABLE;
+
+-- EXEMPLO (27):
+
+ALTER TABLE tb_status_encomenda_2
+DISABLE CONSTRAINT nn_status_encomenda_2;
+
+-- EXEMPLO (28):
+ALTER TABLE tb_status_encomenda_2
+ENABLE CONSTRAINT uq_status_encomenda_2_status;
+
+-- EXEMPLO (29):
+
+ALTER TABLE tb_status_encomenda_2
+ENABLE NOVALIDATE CONSTRAINT uq_status_encomenda_2_status;
+
+-- EXEMPLO (30):
+
+ALTER TABLE tb_status_encomenda_2
+DROP CONSTRAINT uq_status_encomenda_2_status;
+
+-- EXEMPLO (31):
+
+ALTER TABLE tb_status_encomenda_2
+ADD CONSTRAINT uq_status_encomenda_2_status UNIQUE(status)
+DEFERRABLE INITIALLY DEFERRED;
+
+-- EXEMPLO (32):
+
+SELECT constraint_name,
+       constraint_type,
+       status,
+       deferrable,
+       deferred,
+FROM user_constraints
+WHERE table_name = 'TB_STATUS_ENCOMENDA_2';
+
+-- EXEMPLO (33):
+
+SELECT constraint_name,
+       column_name
+FROM user_cons_columns
+WHERE table_name = 'TB_STATUS_ENCOMENDA_2'
+ORDER BY constraint_name;
+
+-- EXEMPLO (34):
+
+SELECT ucc.column_name, ucc.constraint_name, uc.constraint_type, uc.status
+FROM user_constraints uc, user_cons_columns ucc
+WHERE uc.table_name = ucc.table_name
+AND uc.constraint_name = ucc.constraint_name
+AND ucc.table_name = 'TB_STATUS_ENCOMENDA_2'
+ORDER BY ucc.constraint_name;
+
+-- EXEMPLO (35):
+
+RENAME tb_status_encomenda_2 TO tb_status_encomenda_3;
+
+-- EXEMPLO (36):
+
+COMMENT ON TABLE tb_status_encomenda_3 IS
+'tb_status_encomenda_3 armazena o estado de um pedido';
+
+-- EXEMPLO (37):
+
+COMMENT ON COLUMN
+tb_status_encomenda_3.ultima_modificacao IS 'ultima_modificacao armazena a data e hora da última modificação do pedido';
+
+-- EXEMPLO (38):
+
+SELECT * 
+FROM user_tab_comments
+WHERE table_name = 'TB_STATUS_ENCOMENDA_3';
+
+-- EXEMPLO (39):
+
+SELECT *
+FROM user_col_comments
+WHERE table_name = 'TB_STATUS_ENCOMENDA_3';
+
+-- EXEMPLO (40):
+
+TRUNCATE TABLE tb_status_encomenda_3;
+
+-- EXEMPLO (41):
+
+DROP TABLE tb_status_encomenda_3;
