@@ -24,27 +24,30 @@ FROM tb_empregado;
 
 ---------------------------------------------------------------------------------------------------
 -- 3)
-SELECT hf.data_termino, hf.id_funcao, COUNT(e.id_empregado)
-FROM tb_empregado e
-INNER JOIN tb_historico_funcao hf ON (e.id_funcao= hf.id_funcao)
-GROUP BY hf.id_funcao , hf.data_termino;
+SELECT EXTRACT(year FROM data_termino), id_funcao, COUNT(id_empregado)
+FROM tb_historico_funcao
+GROUP BY id_funcao , EXTRACT(year FROM data_termino)
+ORDER BY COUNT(id_empregado) ASC;
 
 
 ---------------------------------------------------------------------------------------------------
 -- 4)
-SELECT COUNT(TO_CHAR(e.data_admissao, 'D')) AS "Contador", e.data_admissao, CASE
-WHEN TO_CHAR(e.data_admissao, 'D') = 1 THEN 'domingo'
-WHEN TO_CHAR(e.data_admissao, 'D') = 2 THEN 'segunda'
-WHEN TO_CHAR(e.data_admissao, 'D') = 3 THEN 'terça'
-WHEN TO_CHAR(e.data_admissao, 'D') = 4 THEN 'quarta'
-WHEN TO_CHAR(e.data_admissao, 'D') = 5 THEN 'quinta'
-WHEN TO_CHAR(e.data_admissao, 'D') = 6 THEN 'sexta'
-WHEN TO_CHAR(e.data_admissao, 'D') = 7 THEN 'sábado'
-END AS "Dias da Semana"
-FROM tb_empregado e
-GROUP BY e.data_admissao
-ORDER BY COUNT(TO_CHAR(e.data_admissao, 'D')) DESC;
-
+SELECT
+CASE
+  WHEN TO_CHAR(data_admissao, 'D') = 1 THEN 'domingo'
+  WHEN TO_CHAR(data_admissao, 'D') = 2 THEN 'segunda'
+  WHEN TO_CHAR(data_admissao, 'D') = 3 THEN 'terça'
+  WHEN TO_CHAR(data_admissao, 'D') = 4 THEN 'quarta'
+  WHEN TO_CHAR(data_admissao, 'D') = 5 THEN 'quinta'
+  WHEN TO_CHAR(data_admissao, 'D') = 6 THEN 'sexta'
+  WHEN TO_CHAR(data_admissao, 'D') = 7 THEN 'sábado'
+END 
+AS "Dias da Semana", 
+COUNT(id_empregado) "Funcionários Contratados"
+FROM tb_empregado
+GROUP BY TO_CHAR(data_admissao, 'D')
+HAVING COUNT(id_empregado) >= 20
+ORDER BY COUNT(TO_CHAR(data_admissao, 'D')) DESC;
 
 ---------------------------------------------------------------------------------------------------
 -- 5)

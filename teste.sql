@@ -241,3 +241,53 @@ END sp_get_emp;
 BEGIN
     sp_get_emp(999);
 END;
+
+
+--------------------
+
+-- 8
+
+-- 1 
+
+SELECT nome, sobrenome 
+FROM tb_empregado
+WHERE nome LIKE '%li%';
+
+
+-- 2. A impressão de envelope restringe o campo destinatário para 15 caracteres. Preferencialmente, o campo destinatário contém valores de NOME e SOBRENOME do funcionário separado por um espaço simples. Quando o tamanho combinado de NOME e SOBRENOME do funcionário excede 10 caracteres, o campo destinatário deve conter somente o nome formal. O nome formal de um funcionário é feito da primeira letra do NOME e os  10 primeiros caracteres de SOBRENOME. Você deve recuperar uma lista de valores de NOME e SOBRENOME e de nomes formais de funcionários em que o tamanho de NOME e SOBRENOME exceda --- 10 caracteres.
+
+SELECT nome, sobrenome, SUBSTR(nome, 1, 1) || ' ' || SUBSTR(sobrenome, 1, 10) Nome_Formal 
+FROM tb_funcionarios 
+WHERE LENGTH(nome) + LENGTH(sobrenome) > 10;
+
+
+SELECT
+CASE
+   WHEN LENGTH(nome||sobrenome) > 10 
+   THEN SUBSTR(nome, 1, 1) || ' ' || SUBSTR(sobrenome, 1, 10)
+   ELSE
+      nome || ' ' || sobrenome
+   END
+   AS "Nome Formal"
+FROM tb_empregado;
+
+
+
+-- 3 A análise de rotação da equipe de funcionários é um requisito de relatório comum. Você foi incumbido de criar um relatório contendo o 
+-- número de funcionários que deixaram seus trabalhos, agrupado pelo ano no qual saíram. Os trabalhos desempenhados também são exigidos. Os 
+-- resultados devem ser classificados em ordem ascendente com base no número de funcionários em cada grupo. O relatório deve listar o ano, o 
+-- ID_FUNCAO e o número de funcionários que deixaram um trabalho em particular naquele ano.
+
+
+SELECT COUNT(id_empregado), id_funcao, TO_CHAR(data_termino, 'YYYY')
+FROM tb_historico_funcao 
+GROUP BY TO_CHAR(data_termino, 'YYYY'), id_funcao
+ORDER BY COUNT(id_empregado) ASC;
+
+
+SELECT TO_CHAR(data_termino, 'YYYY') "Ano que Parou", 
+       id_funcao,
+       COUNT(*) "Números de Empregados"
+FROM tb_historico_funcao
+GROUP BY TO_CHAR(data_termino, 'YYYY'), id_funcao
+ORDER BY COUNT(*) ASC;
