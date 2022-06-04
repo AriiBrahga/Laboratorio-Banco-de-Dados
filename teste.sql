@@ -291,3 +291,65 @@ SELECT TO_CHAR(data_termino, 'YYYY') "Ano que Parou",
 FROM tb_historico_funcao
 GROUP BY TO_CHAR(data_termino, 'YYYY'), id_funcao
 ORDER BY COUNT(*) ASC;
+
+-- 4
+
+SELECT COUNT(id_empregado), TO_CHAR(data_admissao, 'Day')
+FROM tb_empregado
+GROUP BY TO_CHAR(data_admissao, 'Day')
+HAVING COUNT(id_empregado) > 20;
+
+-- 5
+
+
+CREATE TABLE tb_departamento_replica
+AS 
+SELECT *
+FROM tb_departamento;
+
+CREATE OR REPLACE PROCEDURE sp_questao_05(p_dpto IN tb_departamento_replica.id_departamento%TYPE )
+
+AS
+v_id_dpto         NUMBER;
+v_nome            VARCHAR2(255);
+v_saida           VARCHAR2(255);
+BEGIN
+   SELECT COUNT(*) INTO v_id_dpto 
+   FROM tb_departamento_replica 
+   WHERE id_departamento = p_dpto;
+   
+   SELECT nm_departamento 
+   INTO v_nome 
+   FROM tb_departamento_replica 
+   WHERE id_departamento = p_dpto;
+   
+   IF(v_id_dpto = 1) THEN
+      IF(SUBSTR(LOWER(v_nome), 1 ,1) IN ('a', 'e', 'i', 'o', 'u')) THEN
+         UPDATE tb_departamento_replica 
+         SET nm_departamento = UPPER(nm_departamento) 
+         WHERE id_departamento = p_dpto;
+         
+         SELECT nm_departamento INTO v_saida
+         FROM tb_departamento_replica
+         WHERE id_departamento = p_dpto;
+
+         DBMS_OUTPUT.PUT_LINE('O nome do Depto ' || v_saida || ' foi convertida para maiúsculo'); 
+      ELSE 
+         UPDATE tb_departamento_replica 
+         SET nm_departamento = LOWER(nm_departamento)
+         WHERE id_departamento = p_dpto;
+
+         SELECT nm_departamento INTO v_saida
+         FROM tb_departamento_replica
+         WHERE id_departamento = p_dpto;
+
+         DBMS_OUTPUT.PUT_LINE('O nome do Depto ' || v_saida || ' foi convertida para minúsculo'); 
+      END IF;
+   ELSE
+      DBMS_OUTPUT.PUT_LINE('Depto com ID: ' || p_dpto || ' não encontrado!!'); 
+   END IF;
+END sp_questao_05;
+
+BEGIN
+    sp_questao_05(10);
+END;
