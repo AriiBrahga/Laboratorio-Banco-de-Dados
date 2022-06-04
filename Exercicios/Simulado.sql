@@ -52,11 +52,45 @@ FROM tb_empregado;
 SELECT * 
 FROM tb_funcao
 
-SELECT TO_CHAR(id_funcao, 'A'), ds_funcao
+SELECT id_funcao,
+CASE
+  WHEN id_funcao = 'SH_CLERK' THEN 'A'
+  WHEN id_funcao = 'ST_MAN' THEN 'B'
+  WHEN id_funcao = 'AC_ACCOUNT' THEN 'C'
+  WHEN id_funcao = 'AC_MGR' THEN 'D'
+  WHEN id_funcao = 'IT_PROG' THEN 'E'
+ELSE '0'
+END  Grade
 FROM tb_funcao
-WHERE 
+ORDER BY Grade;
 
 
 -- Questão 7
+
+SELECT nome || sobrenome "Nome Empregado", ROUND((SYSDATE - data_admissao)/30) "Meses Trabalhados" 
+FROM tb_empregado
+ORDER BY (SYSDATE - data_admissao)/30;
+
+
+-- Questão 8
+
+SELECT e.nome "Nome Empregado", d.nm_departamento "Nome Departamento", l.cidade "Cidade", l.estado "Estado"
+FROM tb_empregado e 
+INNER JOIN tb_departamento d ON (e.id_departamento = d.id_departamento)
+INNER JOIN tb_localizacao l ON (d.id_localizacao = l.id_localizacao)
+WHERE e.percentual_comissao IS NOT NULL;
+
+-- Questão 9
+
+-- No usuario SYSTEM
+
+GRANT SELECT, UPDATE, INSERT ON tb_departamento TO Joao WITH ADMIN OPTION;
+
+-- Questão 10
+
+
+SELECT REPLACE(id_funcao, 'SH', 'SHIPPING')
+FROM tb_empregado;
+
 
 
