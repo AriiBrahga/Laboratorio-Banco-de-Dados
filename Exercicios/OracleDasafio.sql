@@ -22,9 +22,9 @@ OR  id_gerente = 148;
 
 -- Exercicio 3
 
-SELECT NVL(g.nome, 'Os acionistas') || ' gerencia ' || e.nome 
-FROM tb_empregado e
-RIGHT OUTER JOIN tb_empregado g ON(e.id_empregado = g.id_empregado)
+SELECT NVL(g.nome, 'Os Acionistas') || ' gerencia ' || e.nome
+FROM tb_empregado e 
+LEFT OUTER JOIN tb_empregado g ON (e.id_gerente = g.id_empregado)
 ORDER BY g.nome DESC;
 
 -- EXERCICIO 04
